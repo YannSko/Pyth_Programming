@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import asyncio
+import  Liste_chained
 
 intents = discord.Intents.all()
 
