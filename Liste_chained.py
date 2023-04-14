@@ -16,16 +16,37 @@ class list_chained:
     def size(self):
         return self.size
     
-    def insert(self, indice, data):
+    def get_size(self):
+        return self.size
+    
+    def insert(self, index, data):
         current_node = self.first_node
-        i = 1 
-        while indice > i:
+        i = 0 
+        while index > i + 1:
             current_node = current_node.next_node
             i += 1
-            new_node = Node(data)
-            new_node.next_node = current_node.next_node
-            current_node.next_node = new_node
-            self.size += 1
+        new_node = Node(data)
+        new_node.next_node = current_node.next_node
+        current_node.next_node = new_node
+        self.size += 1
+        
+    def get_all_data(self):
+        current_node = self.first_node
+        data = []
+        while current_node:
+            data.append(current_node.data)
+            current_node = current_node.next_node
+        return data
+    
+    def get_data_at_index(self, index):
+        if index < 0 or index >= self.size:
+            return None
+        current_node = self.first_node
+        i = 0
+        while i < index:
+            current_node = current_node.next_node
+            i += 1
+        return current_node.data
             
         
 class Node:
