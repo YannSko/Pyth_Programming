@@ -29,24 +29,14 @@ class list_chained:
         new_node.next_node = current_node.next_node
         current_node.next_node = new_node
         self.size += 1
-        
-    def get_all_data(self):
-        current_node = self.first_node
-        data = []
-        while current_node:
-            data.append(current_node.data)
-            current_node = current_node.next_node
-        return data
-    
-    def get_data_at_index(self, index):
-        if index < 0 or index >= self.size:
-            return None
-        current_node = self.first_node
-        i = 0
-        while i < index:
-            current_node = current_node.next_node
-            i += 1
-        return current_node.data
+    def Promenade (self,index,data):
+        txt = str(self.last_node.data)
+        return txt
+
+
+       
+        self.size -= 1
+   
             
         
 class Node:
@@ -106,7 +96,38 @@ class Stack:
     def peek(self):
         return self.last_node.data
 
-       
+class fifo:
+    def __init__(self,data):
+        self.first_node = Node(data)
+        self.size =1
+
+    def __str__(self):
+        txt = str(self.first_node)
+        return txt
+    def push(self,data):
+        if self.first_node == None :
+            self.first_node = Node(data)
+            return
+        current_node = self.first_node
+        while current_node.next_node !=None:
+            current_node = current_node.next_node
+        current_node.next_node = Node(data)
+
+
+    def pop(self,data):
+        data = self.first_node.data
+        self.first_node = self.first_node.next_node
+        
+        return data 
+    def peek(self):
+        return self.first_node
+    def size(self):
+        return self.size
+    
+class Boucle:
+    def __init__(self,data):
+        self.first_node = Node(data)
+
         
 
     
