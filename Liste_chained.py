@@ -4,47 +4,85 @@ class list_chained:
         self.last_node = self.first_node
         self.size = 1
         
-    def append(self,data):
+    def append(self, data):
         self.last_node.next_node = Node(data)
         self.last_node = self.last_node.next_node
-        self.size +=1
-    def insert_first(self,data):
+        self.size += 1
+        
+    def insert_first(self, data):
         current_node = Node(data)
         current_node.next_node = self.first_node
         self.first_node = current_node
-        self.size +=1
-    def size(self):
-        return self.size
-    
+        self.size += 1
+        
     def get_size(self):
         return self.size
     
     def insert(self, index, data):
         current_node = self.first_node
         i = 0 
-        while index > i + 1:
+        while index > i:
             current_node = current_node.next_node
             i += 1
         new_node = Node(data)
         new_node.next_node = current_node.next_node
         current_node.next_node = new_node
         self.size += 1
-    def Promenade (self,index,data):
-        txt = str(self.last_node.data)
-        return txt
-
-
-       
-        self.size -= 1
-   
+        
+    def last_elmt(self):
+        return self.last_node.data
+    
+    def first_elmt(self):
+        return self.first_node.data
+                
+    def delete_last(self):
+        if self.size == 1:
+            self.first_node = None
+            self.last_node = None
+            self.size = 0
+        else:
+            current_node = self.first_node
+            while current_node.next_node != self.last_node:
+                current_node = current_node.next_node
+            current_node.next_node = None
+            self.last_node = current_node
+            self.size -= 1
             
+    def delete_at_index(self, index):
+        if index < 0 or index >= self.size:
+            raise IndexError("Index out of range")
+        if index == 0:
+            self.first_node = self.first_node.next_node
+            self.size -= 1
+        else:
+            current_node = self.first_node
+            i = 0 
+            while index > i + 1:
+                current_node = current_node.next_node
+                i += 1
+            current_node.next_node = current_node.next_node.next_node
+            self.size -= 1
+    def show_all(self):
+        current_node = self.first_node
+        i = 0
+        List = []
+        while current_node is not None:
+            pip = "Message numéro: {}\n Contenu: {}".format(i, current_node.data)
+            List.append(pip)
+            current_node = current_node.next_node
+            i += 1
+        return List
+    def delete_all(self):
+        self.first_node = None
+        self.last_node = None
+        self.size = 0      
         
 class Node:
     def __init__(self,data):
         self.data = data
         self.next_node = None
 
-L = list_chained(5)
+
 
 
 class list_chained_sorted(list_chained):
