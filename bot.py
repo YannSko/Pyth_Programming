@@ -1,15 +1,16 @@
 import discord
 from discord.ext import commands
 import asyncio
-from Liste_chained import list_chained, Node
+from Liste_chained import list_chained, Node, fifo
 
 intents = discord.Intents.all()
 
 client = commands.Bot(command_prefix ="!", intents = intents)
 
 
-my_list = list_chained("début d'historique") 
-nod = Node("pipi")
+my_list = list_chained("historique=liste chainée") 
+nod = Node("Ne")
+fif = fifo("Queue")
 @client.event
 async def on_message(message):
     if message.author == client.user:

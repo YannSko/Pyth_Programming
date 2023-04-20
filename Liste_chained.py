@@ -73,9 +73,9 @@ class list_chained:
             i += 1
         return List
     def delete_all(self):
-        self.first_node = None
-        self.last_node = None
-        self.size = 0      
+        self.first_node = Node("début historique")
+        self.last_node = self.first_node
+        self.size = 1      
         
 class Node:
     def __init__(self,data):
@@ -161,6 +161,7 @@ class fifo:
         return self.first_node
     def size(self):
         return self.size
+   
     
 class Boucle:
     def __init__(self,data):
