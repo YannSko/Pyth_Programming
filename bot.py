@@ -33,10 +33,11 @@ async def on_ready():
 
 # _________________________________________History Related____________________________________________
 async def add_to_history(message):
-    global Component_history
-    Component_history = Node(message.content)
-    my_list.append(Component_history.data)
-    await message.channel.send(f'le message "{Component_history.data}" est placé dans lhistorique')
+    if not message.content.startswith(tuple(str(i) for i in range(10))): # prevent le !menu
+        global Component_history
+        Component_history = Node(message.content)
+        my_list.append(Component_history.data)
+        await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique.')
 
 
 
@@ -119,11 +120,13 @@ async def menu(ctx):
     # Check if user is first in fifo, if not add them to the end
     if fifo.peek() is None:
         fifo.push(ctx.author.id)
-    elif fifo.peek().data != ctx.author.id:
-        fifo.push(ctx.author.id)
-        if fifo.peek().data != ctx.author.id: # double-check that user is not first in line
+    else:
+        if fifo.peek().data != ctx.author.id:
+            fifo.push(ctx.author.id)
+        if fifo.peek() is None: # Check if queue is still empty after adding the user
             await ctx.send("You are not currently first in line. Please wait your turn.")
             return
+
 
     while True:
         menu_str = "Que voulez-vous faire?\n" \
