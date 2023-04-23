@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import asyncio
 from Liste_chained import list_chained, Node, fifo
+from question_tree import Tree
 
 intents = discord.Intents.all()
 
@@ -11,6 +12,8 @@ client = commands.Bot(command_prefix ="!", intents = intents)
 my_list = list_chained("historique=liste chainée") 
 nod = Node("Ne")
 fifo = fifo(None)
+tree = Tree("Do you want to learn about Python?")
+'''
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -24,7 +27,26 @@ async def on_message(message):
     if message.content.startswith(client.command_prefix):
         ctx = await client.get_context(message)
         await client.invoke(ctx)
+'''
+@client.event
+async def on_message(message):
+    if message.author.bot:
+        return
 
+    if message.content.lower() == "yes" or message.content.lower() == "no":
+        response = tree.traverse(message.content.lower())
+        if response:
+            await message.channel.send(response)
+
+    if message.content != None:
+        await add_to_history(message)
+
+    if message.content.startswith("Hello"):
+        await message.channel.send("hello")
+
+    if message.content.startswith(client.command_prefix):
+        ctx = await client.get_context(message)
+        await client.invoke(ctx)
 
 @client.event
 async def on_ready():
@@ -180,6 +202,105 @@ async def menu(ctx):
         else:
             fifo.pop(ctx.author.id) 
             return
+
+#_________________________ABRE POUR PAPOTER __________________________________
+
+
+#### COMMAND
+@client.command(name="papote")
+async def start(ctx):
+    papote_tree.reset()
+    await ctx.send(papote_tree.get_question())
+
+    def check(author):
+        def inner_check(message):
+            return message.author == author
+        return inner_check
+
+    author = ctx.message.author
+    while True:
+        try:
+            message = await client.wait_for('message', check=check(author), timeout=60)
+        except asyncio.TimeoutError:
+            await ctx.send("Sorry, you took too long to respond.")
+            break
+
+        papote_tree.choice(message.content.lower())
+
+        if papote_tree.current_node.answer_to_go_here == "Do you want to learn about Python?":
+            papote_tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
+            await ctx.send(papote_tree.current_node.question)
+
+        elif papote_tree.current_node.answer_to_go_here == "Beginner":
+            papote_tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
+            await ctx.send(papote_tree.current_node.question)
+
+        elif papote_tree.current_node.answer_to_go_here == "Intermediate":
+            papote_tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
+            papote_tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
+            await ctx.send(papote_tree.current_node.question)
+
+        elif papote_tree.current_node.answer_to_go_here == "Advanced":
+            papote_tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
+            await ctx.send(papote_tree.current_node.question)
+
+        elif papote_tree.current_node.answer_to_go_here == "Yes":
+            await ctx.send("Great! You should check out resources for {}.".format(papote_tree.current_node.question))
+
+            # Add final message and reset tree
+            papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "")
+            await ctx.send(papote_tree.current_node.question)
+            papote_tree.reset()
+            break
+
+        elif papote_tree.current_node.answer_to_go_here == "No":
+            await ctx.send("No problem, feel free to explore other topics.")
+            papote_tree.reset()
+            break
+
+        else:
+            await ctx.send(papote_tree.current_node.question)
+@client.command(name="help_papote")
+async def helpme(ctx):
+    tree.reset()
+    await ctx.send(tree.current_node.question)
+
+@client.command(name="reset_papote")
+async def reset(ctx):
+    tree.reset()
+    await ctx.send("Conversation has been reset.")
+
+@client.command(name="topic_papote")
+async def speak_about(ctx, topic):
+    # Modify this list to include the topics you want the bot to discuss
+    topics = ["python", "DevWeb", "Machine Learning", "GameDev"]
+    if topic.lower() in topics:
+        await ctx.send("Yes, I can help you with {}.".format(topic))
+    else:
+        await ctx.send("Sorry, I don't have information on that topic.")
+
+#________________Arbre_____________
+
+papote_tree = Tree("Do you want to learn about Python?")
+
+papote_tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
+
+papote_tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
+papote_tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
+papote_tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
+papote_tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
+
+papote_tree.append("Python is a great choice for web development. Are you interested in web frameworks like Django or Flask?", ["Yes", "No"], "Do you want to learn Python for web development?")
+papote_tree.append("Python is widely used in data analysis. Are you interested in tools like Pandas, NumPy, or Matplotlib?", ["Yes", "No"], "Do you want to learn Python for data analysis?")
+papote_tree.append("Python is a popular choice for machine learning. Are you interested in libraries like Scikit-learn, TensorFlow, or PyTorch?", ["Yes", "No"], "Do you want to learn Python for machine learning?")
+papote_tree.append("Python can be used for game development with libraries like Pygame. Are you interested in game development?", ["Yes", "No"], "Do you want to learn Python for game development?")
+
+papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is a great choice for web development. Are you interested in web frameworks like Django or Flask?")
+papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is widely used in data analysis. Are you interested in tools like Pandas, NumPy, or Matplotlib?")
+papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is a popular choice for machine learning. Are you interested in libraries like Scikit-learn, TensorFlow, or PyTorch?")
+papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python can be used for game development with libraries like Pygame. Are you interested in game development?") 
+papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Do you want to learn about Python?") 
+
 
 
 
