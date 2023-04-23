@@ -5,6 +5,4 @@ class Hashtable:
         self._assign_buckets(elements)
     
     def _assign_buckets(self,input_key):
-       
-        
-    def 
+       pass

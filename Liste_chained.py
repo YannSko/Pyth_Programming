@@ -162,6 +162,25 @@ class fifo:
     def size(self):
         return self.size
    
+class HistoryManager(fifo):
+    def __init__(self):
+        super().__init__(None)
+        self.history_queue = fifo(None)
+
+    def add_to_queue(self, user_id):
+        self.history_queue.push(user_id)
+
+    def remove_from_queue(self):
+        return self.history_queue.pop()
+
+    def is_queue_empty(self):
+        return self.history_queue.size == 0
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
     
 class Boucle:
     def __init__(self,data):
