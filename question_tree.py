@@ -1,67 +1,45 @@
-class node:
-  def __init__(self, answer_to_go_here, question):
-    self.answer_to_go_here = answer_to_go_here
+class node : 
+  def __init__(self, question, reponses):
     self.question = question
+    self.reponses = reponses
     self.next_nodes = []
 
-  def size(self):
-    count = 1 
-    for node in self.next_nodes:
-      count += node.size()  
-    return count
+  def append(self, question,reponses,previous_question):
+    if previous_question == self.question:
+      self.next_nodes.append(node(question,reponses))
+    else:
+      for N in self.next_nodes:
+        N.append(question,reponses,previous_question)
 
-  def deepth(self):
-    Max = 0
-    for node in self.next_nodes:
-      if node.deepth() > Max:
-        Max = node.deepth()
-    return Max + 1
+  def delete(self, question):
+    for N in self.next_nodes:
+      if N.question == question:
+        del N
+      else:
+        N.delete(question)
 
-  def append(self,question, reponses, question_precedante):
-    if question_precedante == self.question:
-      self.next_nodes.append(node(question, reponses))
-    for n in self.next_nodes:
-      n.append(question, reponses, question_precedante)
-      
-  def traverse(self, answer):
-    if not self.next_nodes:
-      return self.answer_to_go_here
-    for node in self.next_nodes:
-      if answer == node.answer_to_go_here:
-        return node.question
-    return None
+class tree : 
+  def __init__(self,first_question):
+    self.first_node = node(first_question,[])
+    self.current_node = self.first_node
 
-class Tree:
-    def __init__(self,question):
-        self.first_node = node("",question)
-        self.current_node = self.first_node
+  def append_question(self,question,reponses,previous_question):
+    self.first_node.append(question,reponses,previous_question)
 
-    def size(self):
-        return self.first_node.size()
+  def delete_question(self,question):
+    if self.first_node.question == question:
+      self.first_node = None
+    else:
+      self.first_node.delete(question)
 
-    def deepth(self):
-        return self.first_node.deepth()
+  def get_question(self):
+    return self.current_node.question
 
-    def append(self, question, reponses, question_precedante):
-        self.first_node.append( question, reponses, question_precedante)
+  def send_answer(self, reponse):
+    for N in self.current_node.next_nodes:
+      if reponse in N.reponses:
+        self.current_node = N
+        break
+    
+    return self.current_node.question
 
-    def get_question(self):
-        return self.current_node.question
-
-    def choice(self, message):
-        found = False
-        for node in self.current_node.next_nodes:
-            if node.answer_to_go_here == message:
-                self.current_node = node
-                found = True
-                break
-            if not found:
-                self.current_node = self.first_node
-    def reset(self):
-        self.current_node = self.first_node
-
-    def traverse(self, answer):
-        response = self.current_node.traverse(answer)
-        if response:
-            self.current_node = self.current_node.next_nodes[0]
-        return response
