@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 from Liste_chained import list_chained, Node, fifo
 from question_tree import Tree
+import datetime
 
 intents = discord.Intents.all()
 
@@ -56,8 +57,11 @@ async def on_ready():
 # _________________________________________History Related____________________________________________
 async def add_to_history(message):
     if not message.content.startswith(tuple(str(i) for i in range(10))): # prevent le !menu
-        global Component_history
-        Component_history = Node(message.content)
+        author_id = str(message.author.id)
+        timestamp = str(datetime.datetime.now())
+        message_content = message.content
+        message_data = f'Message : {message_content} | Auteur : {author_id} | Date/Heure : {timestamp}'
+        Component_history = Node(message_data)
         my_list.append(Component_history.data)
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique.')
 
@@ -279,7 +283,7 @@ async def speak_about(ctx, topic):
         await ctx.send("Sorry, I don't have information on that topic.")
 
 #________________Arbre_____________
-
+'''
 papote_tree = Tree("Do you want to learn about Python?")
 
 papote_tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
@@ -301,6 +305,6 @@ papote_tree.append("Python is a versatile language that can be used for many app
 papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Do you want to learn about Python?") 
 
 
-
+'''
 
 client.run("MTA5MTI2Mjc0NjI1MjgwNDEyNg.Gsebrp.cJdD2YSX_V6-VC_RuX39NwIxK8PD9INRiq2eSM")
