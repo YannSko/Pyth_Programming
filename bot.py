@@ -4,6 +4,7 @@ import asyncio
 from Liste_chained import list_chained, Node, fifo
 from question_tree import Tree
 import datetime
+from Hashtable_user import HashTableUser
 
 intents = discord.Intents.all()
 
@@ -64,7 +65,19 @@ async def add_to_history(message):
         Component_history = Node(message_data)
         my_list.append(Component_history.data)
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique.')
+        
+        # Retrieve the history of the user
+        user_history = HashTableUser.get(author_id)
 
+        # If the user has no history yet, create a new linked list for them
+        if not user_history:
+            user_history = list_chained(f"Historique de {message.author.display_name}")
+            HashTableUser.append(author_id, user_history)
+
+        # Add the new message node to the user's history
+        user_history.append(Component_history.data)
+
+        await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique de {message.author.display_name}.')
 
 
 @client.command(name="history")
