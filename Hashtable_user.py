@@ -1,5 +1,4 @@
-from Liste_chained import list_chained, Node, fifo
-
+from Liste_chained import list_chained
 class HashTableUser:
     def __init__(self, bucket_size):
         self.buckets = []

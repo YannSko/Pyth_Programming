@@ -66,19 +66,20 @@ async def add_to_history(message):
         my_list.append(Component_history.data)
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique.')
         
-        # Retrieve the history of the user
+        
         user_history = HashTableUser.get(author_id)
 
-        # If the user has no history yet, create a new linked list for them
+        # dans le cas lhistory nexiste pas
         if not user_history:
             user_history = list_chained(f"Historique de {message.author.display_name}")
             HashTableUser.append(author_id, user_history)
 
-        # Add the new message node to the user's history
+        # ajout
         user_history.append(Component_history.data)
 
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique de {message.author.display_name}.')
-
+        with open("history.txt", "a") as f:
+            f.write(message_data + "\n")
 
 @client.command(name="history")
 async def show_history(ctx):
@@ -225,8 +226,8 @@ async def menu(ctx):
 #### COMMAND
 @client.command(name="papote")
 async def start(ctx):
-    papote_tree.reset()
-    await ctx.send(papote_tree.get_question())
+    tree.reset()
+    await ctx.send(tree.get_question())
 
     def check(author):
         def inner_check(message):
@@ -241,41 +242,41 @@ async def start(ctx):
             await ctx.send("Sorry, you took too long to respond.")
             break
 
-        papote_tree.choice(message.content.lower())
+        tree.choice(message.content.lower())
 
-        if papote_tree.current_node.answer_to_go_here == "Do you want to learn about Python?":
-            papote_tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
-            await ctx.send(papote_tree.current_node.question)
+        if  tree.current_node.answer_to_go_here == "Do you want to learn about Python?":
+            tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
+            await ctx.send(tree.current_node.question)
 
-        elif papote_tree.current_node.answer_to_go_here == "Beginner":
-            papote_tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
-            await ctx.send(papote_tree.current_node.question)
+        elif tree.current_node.answer_to_go_here == "Beginner":
+            tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
+            await ctx.send(tree.current_node.question)
 
-        elif papote_tree.current_node.answer_to_go_here == "Intermediate":
-            papote_tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
-            papote_tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
-            await ctx.send(papote_tree.current_node.question)
+        elif tree.current_node.answer_to_go_here == "Intermediate":
+            tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
+            tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
+            await ctx.send(tree.current_node.question)
 
-        elif papote_tree.current_node.answer_to_go_here == "Advanced":
-            papote_tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
-            await ctx.send(papote_tree.current_node.question)
+        elif tree.current_node.answer_to_go_here == "Advanced":
+            tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
+            await ctx.send(tree.current_node.question)
 
-        elif papote_tree.current_node.answer_to_go_here == "Yes":
-            await ctx.send("Great! You should check out resources for {}.".format(papote_tree.current_node.question))
+        elif tree.current_node.answer_to_go_here == "Yes":
+            await ctx.send("Great! You should check out resources for {}.".format(tree.current_node.question))
 
-            # Add final message and reset tree
-            papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "")
-            await ctx.send(papote_tree.current_node.question)
-            papote_tree.reset()
+            
+            tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "")
+            await ctx.send(tree.current_node.question)
+            tree.reset()
             break
 
-        elif papote_tree.current_node.answer_to_go_here == "No":
+        elif tree.current_node.answer_to_go_here == "No":
             await ctx.send("No problem, feel free to explore other topics.")
-            papote_tree.reset()
+            tree.reset()
             break
 
         else:
-            await ctx.send(papote_tree.current_node.question)
+            await ctx.send(tree.current_node.question)
 @client.command(name="help_papote")
 async def helpme(ctx):
     tree.reset()
