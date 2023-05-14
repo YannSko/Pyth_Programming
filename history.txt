@@ -19,3 +19,7 @@ Message : !vote 0 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:14:
 Message : !show_sug 2 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:15:24.091733
 Message : !vote 2 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:15:58.242589
 Message : !menu | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:16:43.006619
+Message : !sug | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:25:00.740204
+Message : !sug   miam les chips | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:25:34.083501
+Message : !sug vote 0 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:25:52.896232
+Message : !sug vote 0 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:25:59.742714

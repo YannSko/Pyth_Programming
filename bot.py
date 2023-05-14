@@ -16,8 +16,12 @@ my_list = list_chained("historique=liste chainée")
 nod = Node("Ne")
 fifo = fifo(None)
 
-with open("suggestions.json", "w") as f:
-    json.dump([], f)
+def load_suggestions():
+    with open("suggestions.json", "r") as f:
+        suggestions = json.load(f)
+    return suggestions
+
+suggestions = load_suggestions()
 
 @client.event
 async def on_message(message):
@@ -103,6 +107,8 @@ def save_data():
             user_history = HashTableUser.get(user_id[0])
             for message_data in user_history:
                 f.write(message_data + "\n")
+
+def save_suggestions():
     with open("suggestions.json", "w") as f:
         json.dump(suggestions, f)
 
@@ -274,6 +280,7 @@ async def suggestion(ctx, *, suggestion):
     # Ajout la sug
     suggestions.append({"author": author.id, "suggestion": suggestion, "votes": []})
     await ctx.send(f"{author.mention} Votre suggestion a été prise en compte !")
+    save_suggestions()
 
 # affiche la liste de sug
 @client.command(name="show_sug")
@@ -300,6 +307,7 @@ async def vote(ctx, suggestion_number):
             # Ajout du vote à la suggestion
             suggestion["votes"].append(author.id)
             await ctx.message.add_reaction("👍")
+            save_suggestions()
         else:
             await ctx.send(f"{author.mention} Vous avez déjà voté pour cette suggestion.")
     except:
