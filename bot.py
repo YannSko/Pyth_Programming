@@ -14,7 +14,9 @@ client = commands.Bot(command_prefix ="!", intents = intents)
 my_list = list_chained("historique=liste chainée") 
 nod = Node("Ne")
 fifo = fifo(None)
-tree = Tree("Do you want to learn about Python?")
+first_question = "What do you want to learn about Python?"
+
+tree = Tree(first_question)
 '''
 @client.event
 async def on_message(message):
@@ -223,79 +225,76 @@ async def menu(ctx):
 
 
 #### COMMAND
-@client.command(name="papote")
-async def start(ctx):
+@client.command(name="d")
+async def start_discussion(ctx):
+ 
+    global tree
+    tree = Tree("What do you want to learn about Python?")
+
+    tree.append_question("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "What do you want to learn about Python?")
+
+    tree.append_question("What do you want to learn about Python?", ["Web development", "Data analysis", "Machine learning", "Game development"], "What is your current programming experience?")
+
+    tree.append_question("Do you want to learn Python for web development?", ["Yes", "No"], "Web development")
+    tree.append_question("Do you want to learn Python for data analysis?", ["Yes", "No"], "Data analysis")
+    tree.append_question("Do you want to learn Python for machine learning?", ["Yes", "No"], "Machine learning")
+    tree.append_question("Do you want to learn Python for game development?", ["Yes", "No"], "Game development")
+
+    tree.append_question("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Yes")
+
+    while True:
+        # Send the current question to the user and wait for their response
+        await ctx.send(f"{tree.get_question()} Valid responses: {', '.join(tree.current_node.get_responses())}")
+
+        response = await client.wait_for('message')
+        
+
+        # Check if the response is valid for the current node
+        valid_response = False
+        for n in tree.current_node.next_nodes:
+            if response.content.lower() in n.reponses:
+                tree.current_node = n
+                valid_response = True
+                break
+
+        # If the response is not valid, prompt the user to try again
+        if not valid_response:
+            await ctx.send("Sorry, I didn't understand your response. Please try again.")
+            continue
+
+        # If the current node has no further questions, end the discussion
+        if not tree.current_node.next_nodes:
+            await ctx.send(tree.current_node.question)
+            break
+
+    await ctx.send("Thank you for using our Python learning bot. Have a great day!")
+
+
+@client.command(name="topic")
+async def discussion_topic(ctx):
+    global tree
+    await ctx.send("The current topic of the discussion is: " + tree.get_question())
+
+@client.command(name="reset_python_discussion")
+async def reset_discussion(ctx):
+    global tree
     tree.reset()
-    await ctx.send(tree.get_question())
-
-    def check(author):
-        def inner_check(message):
-            return message.author == author
-        return inner_check
-
-    author = ctx.message.author
-   
-    try:
-            message = await client.wait_for('message', check=check(author), timeout=60)
-    except asyncio.TimeoutError:
-            await ctx.send("Sorry, you took too long to respond.")
-            
-
-    tree.choice(message.content.lower())
-
-    if  tree.current_node.answer_to_go_here == "Do you want to learn about Python?":
-            tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
-            await ctx.send(tree.current_node.question)
-
-    elif tree.current_node.answer_to_go_here == "Beginner":
-            tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
-            await ctx.send(tree.current_node.question)
-
-    elif tree.current_node.answer_to_go_here == "Intermediate":
-            tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
-            tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
-            await ctx.send(tree.current_node.question)
-
-    elif tree.current_node.answer_to_go_here == "Advanced":
-            tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
-            await ctx.send(tree.current_node.question)
-
-    elif tree.current_node.answer_to_go_here == "Yes":
-            await ctx.send("Great! You should check out resources for {}.".format(tree.current_node.question))
-
-            
-            tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "")
-            await ctx.send(tree.current_node.question)
-            tree.reset()
-            
-
-    elif tree.current_node.answer_to_go_here == "No":
-            await ctx.send("No problem, feel free to explore other topics.")
-            tree.reset()
-            
-
-    else:
-        await ctx.send(tree.current_node.question)
-@client.command(name="help_papote")
-async def helpme(ctx):
-    tree.reset()
-    await ctx.send(tree.current_node.question)
-
-@client.command(name="reset_papote")
-async def reset(ctx):
-    tree.reset()
-    await ctx.send("Conversation has been reset.")
-
-@client.command(name="topic_papote")
-async def speak_about(ctx, topic):
-    # Modify this list to include the topics you want the bot to discuss
-    topics = ["python", "DevWeb", "Machine Learning", "GameDev"]
-    if topic.lower() in topics:
-        await ctx.send("Yes, I can help you with {}.".format(topic))
-    else:
-        await ctx.send("Sorry, I don't have information on that topic.")
+    await ctx.send("The discussion has been reset.")
 
 #________________Arbre_____________
+
+
+
+tree.append_question("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "What do you want to learn about Python?")
+
+tree.append_question("What do you want to learn about Python?", ["Web development", "Data analysis", "Machine learning", "Game development"], first_question)
+
+tree.append_question("Do you want to learn Python for web development?", ["Yes", "No"], "Web development")
+tree.append_question("Do you want to learn Python for data analysis?", ["Yes", "No"], "Data analysis")
+tree.append_question("Do you want to learn Python for machine learning?", ["Yes", "No"], "Machine learning")
+tree.append_question("Do you want to learn Python for game development?", ["Yes", "No"], "Game development")
+
+tree.append_question("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Yes")
 '''
 papote_tree = Tree("Do you want to learn about Python?")
 
