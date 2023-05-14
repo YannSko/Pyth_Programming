@@ -1,17 +1,26 @@
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next_node = None
+        self.previous_node = None
+
 class list_chained:
     def __init__(self, first_data):
         self.first_node = Node(first_data)
         self.last_node = self.first_node
+        self.current_node = self.first_node
         self.size = 1
         
     def append(self, data):
         self.last_node.next_node = Node(data)
+        self.last_node.next_node.previous_node = self.last_node
         self.last_node = self.last_node.next_node
         self.size += 1
         
     def insert_first(self, data):
         current_node = Node(data)
         current_node.next_node = self.first_node
+        self.first_node.previous_node = current_node
         self.first_node = current_node
         self.size += 1
         
@@ -19,15 +28,22 @@ class list_chained:
         return self.size
     
     def insert(self, index, data):
-        current_node = self.first_node
-        i = 0 
-        while index > i:
-            current_node = current_node.next_node
-            i += 1
-        new_node = Node(data)
-        new_node.next_node = current_node.next_node
-        current_node.next_node = new_node
-        self.size += 1
+        if index == self.size:
+            self.append(data)
+        elif index == 0:
+            self.insert_first(data)
+        else:
+            current_node = self.first_node
+            i = 0 
+            while index > i:
+                current_node = current_node.next_node
+                i += 1
+            new_node = Node(data)
+            new_node.previous_node = current_node.previous_node
+            new_node.next_node = current_node
+            current_node.previous_node.next_node = new_node
+            current_node.previous_node = new_node
+            self.size += 1
         
     def last_elmt(self):
         return self.last_node.data
@@ -39,13 +55,11 @@ class list_chained:
         if self.size == 1:
             self.first_node = None
             self.last_node = None
+            self.current_node = None
             self.size = 0
         else:
-            current_node = self.first_node
-            while current_node.next_node != self.last_node:
-                current_node = current_node.next_node
-            current_node.next_node = None
-            self.last_node = current_node
+            self.last_node = self.last_node.previous_node
+            self.last_node.next_node = None
             self.size -= 1
             
     def delete_at_index(self, index):
@@ -53,15 +67,20 @@ class list_chained:
             raise IndexError("Index out of range")
         if index == 0:
             self.first_node = self.first_node.next_node
+            self.first_node.previous_node = None
             self.size -= 1
+        elif index == self.size - 1:
+            self.delete_last()
         else:
             current_node = self.first_node
             i = 0 
-            while index > i + 1:
+            while index > i:
                 current_node = current_node.next_node
                 i += 1
-            current_node.next_node = current_node.next_node.next_node
+            current_node.previous_node.next_node = current_node.next_node
+            current_node.next_node.previous_node = current_node.previous_node
             self.size -= 1
+            
     def show_all(self):
         current_node = self.first_node
         i = 0
@@ -72,15 +91,28 @@ class list_chained:
             current_node = current_node.next_node
             i += 1
         return List
+    
     def delete_all(self):
         self.first_node = Node("début historique")
         self.last_node = self.first_node
+        self.current_node = self.first_node
         self.size = 1      
         
-class Node:
-    def __init__(self,data):
-        self.data = data
-        self.next_node = None
+    def navigate_forward(self):
+        if self.current_node.next_node is not None:
+            self.current_node = self.current_node.next_node
+            return self.current_node.data
+        else:
+            return "Fin de l'historique atteinte."
+    
+    def navigate_backward(self):
+        if self.current_node.previous_node is not None:
+            self.current_node = self.current_node.previous_node
+            return self.current_node.data
+        else:
+            return "Début de l'historique atteint."
+        
+
 
 
 

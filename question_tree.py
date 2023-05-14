@@ -8,15 +8,17 @@ class Node:
         if previous_question == self.question:
             self.next_nodes.append(Node(question, responses))
         else:
-            for N in self.next_nodes:
-                N.append(question, responses, previous_question)
+            for n in self.next_nodes:
+                n.append(question, responses, previous_question)
 
     def delete(self, question):
-        for N in self.next_nodes:
-            if N.question == question:
-                self.next_nodes.remove(N)
+        for i, n in enumerate(self.next_nodes):
+            if n.question == question:
+                del self.next_nodes[i]
+                return
             else:
-                N.delete(question)
+                n.delete(question)
+
 
 class Tree:
     def __init__(self, first_question):
@@ -36,18 +38,7 @@ class Tree:
         return self.current_node.question
 
     def send_answer(self, response):
-        for N in self.current_node.next_nodes:
-            if response.content.lower() in N.responses:
-                self.current_node = N
-                break
-
-        return self.current_node.question
-
-    def reset(self):
-        self.current_node = self.first_node
-
-    def speak_about(self, topic):
         for n in self.current_node.next_nodes:
-            if topic.lower() in n.question.lower():
-                return f"Yes, I can speak about {topic}"
-        return f"Sorry, I cannot speak about {topic}"
+            if n.responses == response:
+                self.current_node = n
+                break

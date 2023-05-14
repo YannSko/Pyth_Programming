@@ -43,20 +43,47 @@ async def on_message(message):
         response = tree.traverse(message.content.lower())
         if response:
             await message.channel.send(response)
-
-    if message.content != None:
-        await add_to_history(message)
+    
 
     if message.content.startswith("Hello"):
         await message.channel.send("hello")
+    await add_to_history(message)
+        ### Arbre
 
 
+    if message.author == client.user:
+        return
+'''
+    if message.content.lower() == 'reset':
+        await client.process_commands(message)
+        return
+    elif message.content.lower().startswith('speak about '):
+        topic = message.content.lower().split('speak about ')[1]
+        if topic in ['python', 'sports', 'music']:
+            await message.channel.send(f"Je peux parler de {topic} !")
+        else:
+            await message.channel.send(f"Je ne peux pas parler de {topic}...")
+    else:
+        question = tree.get_question()
+        await message.channel.send(question)
+        response = message.content.lower()
+        tree.send_answer(response)
+        next_question = tree.get_question()
+        await message.channel.send(next_question)
+'''
+### Ajout Historique du message
+        
 @client.event
 async def on_ready():
     channel = client.get_channel(1091265494771843095)
     await channel.send('the bot is ready')
 
 # _________________________________________History Related____________________________________________
+import datetime
+
+HashTableUser = HashTableUser(bucket_size=10)
+
+# fonction pour ajouter un message à l'historique
 async def add_to_history(message):
     if not message.content.startswith(tuple(str(i) for i in range(10))): # prevent le !menu
         author_id = str(message.author.id)
@@ -67,21 +94,41 @@ async def add_to_history(message):
         my_list.append(Component_history.data)
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique.')
         
-        
+        # lier l'historique à l'utilisateur
         user_history = HashTableUser.get(author_id)
-
-        # dans le cas lhistory nexiste pas
+        
+        # si l'historique n'existe pas encore, créer une nouvelle liste chainée pour cet utilisateur
         if not user_history:
             user_history = list_chained(f"Historique de {message.author.display_name}")
             HashTableUser.append(author_id, user_history)
 
-        # ajout
+        # ajouter le message à l'historique de l'utilisateur
         user_history.append(Component_history.data)
 
         await message.channel.send(f'Le message "{Component_history.data}" est placé dans l\'historique de {message.author.display_name}.')
+        
+        # enregistrer les données dans un fichier texte
         with open("history.txt", "a") as f:
             f.write(message_data + "\n")
 
+
+# fonction pour sauvegarder les données
+def save_data():
+    with open("history.txt", "w") as f:
+        for user_id in HashTableUser.buckets:
+            user_history = HashTableUser.get(user_id[0])
+            for message_data in user_history:
+                f.write(message_data + "\n")
+
+
+# fonction pour fermer le bot et sauvegarder les données avant de quitter
+
+async def on_shutdown():
+    save_data()
+    await client.close()
+
+
+        
 @client.command(name="history")
 async def show_history(ctx):
         history_list = my_list.show_all()
@@ -105,55 +152,33 @@ async def delete_all_messages(ctx):
     my_list.delete_all()
     await ctx.send('tout les messages = supprime')
 
+### Mouvement + last + user_history
+@client.command(name="back")
+async def navigate_backward(ctx):
+    message = my_list.navigate_backward()
+    await ctx.channel.send(message)
 
+@client.command(name="forward")
+async def navigate_forward(ctx):
+    message = my_list.navigate_forward()
+    await ctx.channel.send(message)
+
+@client.command(name="last_message")
+async def show_last_message(ctx):
+    last_message = my_list.last_elmt()
+    await ctx.channel.send("Le dernier message de l'historique est : " + last_message)
+
+@client.command(name="user_history")
+async def show_user_history(ctx, user_id: int):
+    user_messages = [msg for msg in my_list.show_all() if str(user_id) in msg]
+    if user_messages:
+        message = "\n".join(user_messages)
+        await ctx.channel.send(f"L'historique pour l'utilisateur avec l'ID {user_id} est :\n{message}")
+    else:
+        await ctx.channel.send(f"Aucun message pour l'utilisateur avec l'ID {user_id}")
 #____________________________Menu_for_History______________________________
-'''
-@client.command(name="menu")
-async def menu(ctx):
-    while True:
-        menu_str = "Que voulez-vous faire?\n" \
-                   "1. Afficher l'historique\n" \
-                   "2. Supprimer le dernier message\n" \
-                   "3. Supprimer un message spécifique\n" \
-                   "4. Tout supprimer\n" \
-                   "Répondez avec le numéro de l'option."
-        await ctx.send(menu_str)
-        try:
-            message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-        except asyncio.TimeoutError:
-            await ctx.send("Temps écoulé. Commande annulée.")
-            return
-        if message.content == "1":
-            await show_history(ctx)
-        elif message.content == "2":
-            await delete_last_message(ctx)
-        elif message.content == "3":
-            await ctx.send("Quel est l'index du message à supprimer?")
-            try:
-                index_message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-            except asyncio.TimeoutError:
-                await ctx.send("Temps écoulé. Commande annulée.")
-                return
-            await delete_message(ctx, int(index_message.content))
-        elif message.content == "4":
-            await delete_all_messages(ctx)
-        elif message.content.lower() == "menu":
-            continue
-        else:
-            await ctx.send("Option invalide.")
-        
-        await ctx.send("Tapez 'menu' pour retourner au menu principal, ou attendez 30 secondes pour quitter.")
-        try:
-            message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-        except asyncio.TimeoutError:
-            await ctx.send("Temps écoulé. Commande annulée.")
-            return
-        if message.content.lower() == "menu":
-            continue
-        else:
-            return
-'''
-@client.command(name="menu")
+
+'''@client.command(name="menu")
 async def menu(ctx):
     global fifo
 
@@ -220,86 +245,147 @@ async def menu(ctx):
         else:
             fifo.pop(ctx.author.id) 
             return
+            '''
+@client.command(name="menu")
+async def menu(ctx):
+    global fifo
+
+    # Check if user is first in fifo, if not add them to the end
+    if fifo.peek() is None:
+        fifo.push(ctx.author.id)
+    else:
+        if fifo.peek().data != ctx.author.id:
+            fifo.push(ctx.author.id)
+        if fifo.peek() is None: # Check if queue is still empty after adding the user
+            await ctx.send("You are not currently first in line. Please wait your turn.")
+            return
+
+
+    while True:
+        menu_str = "Que voulez-vous faire?\n" \
+                   "1. Afficher l'historique\n" \
+                   "2. Supprimer le dernier message\n" \
+                   "3. Supprimer un message spécifique\n" \
+                   "4. Tout supprimer\n" \
+                   "5. Naviguer en arrière\n" \
+                   "6. Naviguer en avant\n" \
+                   "7. Afficher le dernier message\n" \
+                   "8. Afficher l'historique d'un utilisateur\n" \
+                   "9. Quitter\n" \
+                   "Répondez avec le numéro de l'option."
+        await ctx.send(menu_str)
+        try:
+            message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
+        except asyncio.TimeoutError:
+            await ctx.send("Temps écoulé. Commande annulée.")
+            fifo.pop(ctx.author.id) # Remove user from fifo when they time out
+            return
+
+        if message.content == "1":
+            await show_history(ctx)
+        elif message.content == "2":
+            await delete_last_message(ctx)
+        elif message.content == "3":
+            await ctx.send("Quel est l'index du message à supprimer?")
+            try:
+                index_message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
+            except asyncio.TimeoutError:
+                await ctx.send("Temps écoulé. Commande annulée.")
+                fifo.pop(ctx.author.id) # Remove user from fifo when they time out
+                return
+            await delete_message(ctx, int(index_message.content))
+        elif message.content == "4":
+            await delete_all_messages(ctx)
+        elif message.content == "5":
+            message = my_list.navigate_backward()
+            await ctx.channel.send(message)
+        elif message.content == "6":
+            message = my_list.navigate_forward()
+            await ctx.channel.send(message)
+        elif message.content == "7":
+            last_message = show_last_message(ctx)
+            await ctx.send(last_message)
+        elif message.content == "8":
+            await ctx.send("Veuillez mentionner l'utilisateur dont vous voulez voir l'historique.")
+            try:
+                user_mention = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
+            except asyncio.TimeoutError:
+                await ctx.send("Temps écoulé. Commande annulée.")
+                fifo.pop(ctx.author.id) # Remove user from fifo when they time out
+                return
+            await show_user_history(ctx, user_mention.content)
+        elif message.content == "9":
+            await ctx.send("Au revoir !")
+            fifo.pop() # Remove user from fifo
+            return
+        else:
+            await ctx.send("Option invalide. Veuillez réessayer.")
 
 #_________________________ABRE POUR PAPOTER __________________________________
 
 
-#### COMMAND
-@client.command(name="d")
-async def start_discussion(ctx):
- 
+#### Arbre initialisation
+def treep() -> Tree:
+    tree = Tree('Do you wanna play a team sport or an individualist sport ?')
+    tree.first_node.responses = ['team','individualist']
+
+    # First level
+    tree.append_question('Do you wanna play a sport with a ball or without a ball ?', ['team'], 'team')
+    tree.append_question('Do you wanna play a sport with a racket or without a racket ?', ['individualist'], 'individualist')
+    
+    # Second level - team sports
+    tree.append_question('Do you wanna play football or basket ?', ['ball'], 'team with a ball')
+    tree.append_question('Do you prefer running or swimming ?', ['without a ball'], 'team without a ball')
+    
+    # Third level - team sports with a ball
+    tree.append_question('Great choice football is a very famous sport for a reason', ['football'], 'football')
+    tree.append_question('Great choice basket is a very famous sport for a reason', ['basket'], 'basket')
+    
+    # Third level - team sports without a ball
+    tree.append_question('Great choice relay race is a very famous sport for a reason', ['running'], 'relay race')
+    tree.append_question('Great choice swimming relay is a very famous sport for a reason', ['swimming'], 'swimming relay')
+    
+    # Second level - individualist sports
+    tree.append_question('Do you wanna play tennis or badminton ?', ['racket'], 'individualist with a racket')
+    tree.append_question('Do you prefer weightlifting or crossfit ?', ['without a racket'], 'individualist without a racket')
+    
+    # Third level - individualist sports with a racket
+    tree.append_question('Great choice tennis is a very famous sport for a reason', ['tennis'], 'tennis')
+    tree.append_question('Great choice badminton is a very famous sport for a reason', ['badminton'], 'badminton')
+    
+    # Third level - individualist sports without a racket
+    tree.append_question('Great choice running is a very famous sport for a reason', ['running'], 'running')
+    tree.append_question('Great choice weightlifting is a very famous sport for a reason', ['weightlifting'], 'weightlifting')
+    
+    return tree
+###  Command
+
+@client.command(name="tree")
+async def help(ctx):
+    await ctx.send('Bonjour ! Voulez-vous jouer à un sport d\'équipe ou à un sport individuel ? (Répondez par "team" ou "individualist")')
+
+@client.command(name="reset_tree")
+async def reset(ctx):
     global tree
-    tree = Tree("What do you want to learn about Python?")
+    tree = Tree('Do you wanna play a team sport or an individualist sport ?')
+    tree.first_node.responses = ['team','individualist']
+    await ctx.send('Conversation réinitialisée. Voulez-vous jouer à un sport d\'équipe ou à un sport individuel ? (Répondez par "team" ou "individualist")')
 
-    tree.append_question("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "What do you want to learn about Python?")
-
-    tree.append_question("What do you want to learn about Python?", ["Web development", "Data analysis", "Machine learning", "Game development"], "What is your current programming experience?")
-
-    tree.append_question("Do you want to learn Python for web development?", ["Yes", "No"], "Web development")
-    tree.append_question("Do you want to learn Python for data analysis?", ["Yes", "No"], "Data analysis")
-    tree.append_question("Do you want to learn Python for machine learning?", ["Yes", "No"], "Machine learning")
-    tree.append_question("Do you want to learn Python for game development?", ["Yes", "No"], "Game development")
-
-    tree.append_question("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Yes")
-
-    while True:
-        # Send the current question to the user and wait for their response
-        await ctx.send(f"{tree.get_question()} Valid responses: {', '.join(tree.current_node.responses)}")
-
-        response = await client.wait_for('message')
-
-        # Check if the response is valid for the current node
-        valid_response = False
-        for n in tree.current_node.next_nodes:
-            if response.content.lower() in n.reponses:
-                tree.current_node = n
-                valid_response = True
-                break
-
-        # If the response is not valid, prompt the user to try again
-        if not valid_response:
-            await ctx.send("Sorry, I didn't understand your response. Please try again.")
-            continue
-
-        # If the current node is the initial question, skip checking responses
-        if not tree.current_node.responses:
-            tree.current_node = tree.current_node.next_nodes[0]
-            await ctx.send(f"{tree.get_question()}")
-
-        # If the current node has no further questions, end the discussion
-        elif not tree.current_node.next_nodes:
-            await ctx.send(tree.current_node.question)
-            break
-
-    await ctx.send("Thank you for using our Python learning bot. Have a great day!")
+@client.command(name="speak_about")
+async def speak(ctx, topic):
+   
+    if topic in ['python', 'sports', 'music']:
+        await ctx.send(f"Je peux parler de {topic} !")
+    else:
+        await ctx.send(f"Je ne peux pas parler de {topic}...")
 
 
 
-@client.command(name="topic")
-async def discussion_topic(ctx):
-    global tree
-    await ctx.send("The current topic of the discussion is: " + tree.get_question())
-
-@client.command(name="reset_python_discussion")
-async def reset_discussion(ctx):
-    global tree
-    tree.reset()
-    await ctx.send("The discussion has been reset.")
 
 #________________Arbre_____________
 
 
 
-tree.append_question("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "What do you want to learn about Python?")
-
-tree.append_question("What do you want to learn about Python?", ["Web development", "Data analysis", "Machine learning", "Game development"], first_question)
-
-tree.append_question("Do you want to learn Python for web development?", ["Yes", "No"], "Web development")
-tree.append_question("Do you want to learn Python for data analysis?", ["Yes", "No"], "Data analysis")
-tree.append_question("Do you want to learn Python for machine learning?", ["Yes", "No"], "Machine learning")
-tree.append_question("Do you want to learn Python for game development?", ["Yes", "No"], "Game development")
-
-tree.append_question("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Yes")
 '''
 papote_tree = Tree("Do you want to learn about Python?")
 
