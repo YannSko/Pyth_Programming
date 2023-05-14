@@ -14,24 +14,8 @@ client = commands.Bot(command_prefix ="!", intents = intents)
 my_list = list_chained("historique=liste chainée") 
 nod = Node("Ne")
 fifo = fifo(None)
-first_question = "What do you want to learn about Python?"
 
-tree = Tree(first_question)
-'''
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        
-        return
-    if message.content != None:
-        await add_to_history(message)
-    if message.content.startswith("Hello"):
-        await message.channel.send("hello")
-     
-    if message.content.startswith(client.command_prefix):
-        ctx = await client.get_context(message)
-        await client.invoke(ctx)
-'''
+
 @client.event
 async def on_message(message):
     if message.author.bot:
@@ -79,7 +63,7 @@ async def on_ready():
     await channel.send('the bot is ready')
 
 # _________________________________________History Related____________________________________________
-import datetime
+
 
 HashTableUser = HashTableUser(bucket_size=10)
 
@@ -112,7 +96,7 @@ async def add_to_history(message):
             f.write(message_data + "\n")
 
 
-# fonction pour sauvegarder les données
+# fonction pour sauvegarder les données dans hastable
 def save_data():
     with open("history.txt", "w") as f:
         for user_id in HashTableUser.buckets:
@@ -177,75 +161,6 @@ async def show_user_history(ctx, user_id: int):
     else:
         await ctx.channel.send(f"Aucun message pour l'utilisateur avec l'ID {user_id}")
 #____________________________Menu_for_History______________________________
-
-'''@client.command(name="menu")
-async def menu(ctx):
-    global fifo
-
-    # Check if user is first in fifo, if not add them to the end
-    if fifo.peek() is None:
-        fifo.push(ctx.author.id)
-    else:
-        if fifo.peek().data != ctx.author.id:
-            fifo.push(ctx.author.id)
-        if fifo.peek() is None: # Check if queue is still empty after adding the user
-            await ctx.send("You are not currently first in line. Please wait your turn.")
-            return
-
-
-    while True:
-        menu_str = "Que voulez-vous faire?\n" \
-                   "1. Afficher l'historique\n" \
-                   "2. Supprimer le dernier message\n" \
-                   "3. Supprimer un message spécifique\n" \
-                   "4. Tout supprimer\n" \
-                   "5. Quitter\n" \
-                   "Répondez avec le numéro de l'option."
-        await ctx.send(menu_str)
-        try:
-            message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-        except asyncio.TimeoutError:
-            await ctx.send("Temps écoulé. Commande annulée.")
-            fifo.pop(ctx.author.id) # Remove user from fifo when they time out
-            return
-
-        if message.content == "1":
-            await show_history(ctx)
-        elif message.content == "2":
-            await delete_last_message(ctx)
-        elif message.content == "3":
-            await ctx.send("Quel est l'index du message à supprimer?")
-            try:
-                index_message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-            except asyncio.TimeoutError:
-                await ctx.send("Temps écoulé. Commande annulée.")
-                fifo.pop(ctx.author.id) # Remove user from fifo when they time out
-                return
-            await delete_message(ctx, int(index_message.content))
-        elif message.content == "4":
-            await delete_all_messages(ctx)
-        elif message.content == "5":
-            fifo.pop(ctx.author.id)
-            await ctx.send("Vous avez quitté la commande de menu.")
-            return
-        elif message.content.lower() == "menu":
-            continue
-        else:
-            await ctx.send("Option invalide.")
-
-        await ctx.send("Tapez 'menu' pour retourner au menu principal, ou attendez 30 secondes pour quitter.")
-        try:
-            message = await client.wait_for('message', timeout=30.0, check=lambda m: m.author == ctx.author)
-        except asyncio.TimeoutError:
-            await ctx.send("Temps écoulé. Commande annulée.")
-            fifo.pop(ctx.author.id) 
-            return
-        if message.content.lower() == "menu":
-            continue
-        else:
-            fifo.pop(ctx.author.id) 
-            return
-            '''
 @client.command(name="menu")
 async def menu(ctx):
     global fifo
@@ -322,92 +237,56 @@ async def menu(ctx):
             await ctx.send("Option invalide. Veuillez réessayer.")
 
 #_________________________ABRE POUR PAPOTER __________________________________
-
-
-#### Arbre initialisation
-def treep() -> Tree:
-    tree = Tree('Do you wanna play a team sport or an individualist sport ?')
-    tree.first_node.responses = ['team','individualist']
-
-    # First level
-    tree.append_question('Do you wanna play a sport with a ball or without a ball ?', ['team'], 'team')
-    tree.append_question('Do you wanna play a sport with a racket or without a racket ?', ['individualist'], 'individualist')
+### Fonction Pour handle la conv
+async def handle_conversation(ctx, tree):
     
-    # Second level - team sports
-    tree.append_question('Do you wanna play football or basket ?', ['ball'], 'team with a ball')
-    tree.append_question('Do you prefer running or swimming ?', ['without a ball'], 'team without a ball')
-    
-    # Third level - team sports with a ball
-    tree.append_question('Great choice football is a very famous sport for a reason', ['football'], 'football')
-    tree.append_question('Great choice basket is a very famous sport for a reason', ['basket'], 'basket')
-    
-    # Third level - team sports without a ball
-    tree.append_question('Great choice relay race is a very famous sport for a reason', ['running'], 'relay race')
-    tree.append_question('Great choice swimming relay is a very famous sport for a reason', ['swimming'], 'swimming relay')
-    
-    # Second level - individualist sports
-    tree.append_question('Do you wanna play tennis or badminton ?', ['racket'], 'individualist with a racket')
-    tree.append_question('Do you prefer weightlifting or crossfit ?', ['without a racket'], 'individualist without a racket')
-    
-    # Third level - individualist sports with a racket
-    tree.append_question('Great choice tennis is a very famous sport for a reason', ['tennis'], 'tennis')
-    tree.append_question('Great choice badminton is a very famous sport for a reason', ['badminton'], 'badminton')
-    
-    # Third level - individualist sports without a racket
-    tree.append_question('Great choice running is a very famous sport for a reason', ['running'], 'running')
-    tree.append_question('Great choice weightlifting is a very famous sport for a reason', ['weightlifting'], 'weightlifting')
-    
-    return tree
-###  Command
+    answer = None
 
-@client.command(name="tree")
-async def help(ctx):
-    await ctx.send('Bonjour ! Voulez-vous jouer à un sport d\'équipe ou à un sport individuel ? (Répondez par "team" ou "individualist")')
+    while answer != "reset":
+        # Si l'utilisateur a déjà répondu à la question courante, on passe à la suivante
+        if current_node.answer is not None:
+            current_node = current_node.next_nodes(answer)
+        # Sinon, on pose la question et on attend la réponse de l'utilisateur
+        else:
+            question = current_node.question
+            choices = current_node.choices
+            await ctx.send(f"{question} ({', '.join(choices)})")
+            try:
+                response = await client.wait_for("message", check=lambda message: message.author == ctx.author, timeout=60.0)
+                answer = response.content.lower().strip()
+                # Si la réponse n'est pas valide, on redemande la même question
+                if answer not in choices:
+                    await ctx.send("Je n'ai pas compris votre réponse. Veuillez répondre par l'un des choix proposés.")
+                # Sinon, on passe à la question suivante
+                else:
+                    current_node.answer = answer
+                    current_node = current_node.next_node(answer)
+            except asyncio.TimeoutError:
+                await ctx.send("Je n'ai pas obtenu de réponse de votre part. La conversation est terminée.")
+                answer = "reset"
 
-@client.command(name="reset_tree")
-async def reset(ctx):
-    global tree
-    tree = Tree('Do you wanna play a team sport or an individualist sport ?')
-    tree.first_node.responses = ['team','individualist']
-    await ctx.send('Conversation réinitialisée. Voulez-vous jouer à un sport d\'équipe ou à un sport individuel ? (Répondez par "team" ou "individualist")')
 
-@client.command(name="speak_about")
-async def speak(ctx, topic):
-   
-    if topic in ['python', 'sports', 'music']:
-        await ctx.send(f"Je peux parler de {topic} !")
-    else:
-        await ctx.send(f"Je ne peux pas parler de {topic}...")
+### Création de l'abre
+@client.command(name="love")
+async def love(ctx):
+    tree = Tree("Bienvenue dans cette discussion sur l'amour. Pour commencer, pouvez-vous me dire ce qui vous amène ici ?")
+    tree.append_question("Êtes-vous en couple ?", ["Oui", "Non"], "Bienvenue dans cette discussion sur l'amour. Pour commencer, pouvez-vous me dire ce qui vous amène ici ?")
+    tree.append_question("Comment avez-vous rencontré votre partenaire ?", ["En ligne", "À travers des amis", "Au travail", "Dans un lieu public", "Autre"], "Êtes-vous en couple ?")
+    tree.append_question("Qu'est-ce que vous appréciez le plus chez votre partenaire ?", ["Son physique", "Sa personnalité", "Son sens de l'humour", "Sa gentillesse", "Autre"], "Comment avez-vous rencontré votre partenaire ?")
+    tree.append_question("Comment entretenez-vous votre relation amoureuse ?", ["En communiquant ouvertement et régulièrement", "En passant du temps ensemble", "En faisant des choses spéciales pour l'autre", "En respectant l'autre et ses besoins"], "Qu'est-ce que vous appréciez le plus chez votre partenaire ?")
+    tree.append_question("Quelles sont les clés pour maintenir une relation amoureuse saine ?", ["La communication", "La confiance", "Le respect", "Le compromis", "La passion"], "Comment entretenez-vous votre relation amoureuse ?")
+    tree.append_question("Avez-vous déjà vécu une rupture amoureuse ?", ["Oui", "Non"], "Quelles sont les clés pour maintenir une relation amoureuse saine ?")
+    tree.append_question("Comment avez-vous surmonté cette rupture ?", ["En prenant du temps pour moi-même", "En parlant à mes amis et ma famille", "En cherchant l'aide d'un professionnel", "Autre"], "Avez-vous déjà vécu une rupture amoureuse ?")
+    tree.append_leaf("Si vous avez besoin d'aide pour surmonter une rupture amoureuse ou pour améliorer votre relation amoureuse actuelle, je vous recommande de consulter ce site : https://www.psychologytoday.com/us/topics/relationships")
+    await handle_conversation(ctx,tree)
 
 
 
 
-#________________Arbre_____________
 
 
 
-'''
-papote_tree = Tree("Do you want to learn about Python?")
-
-papote_tree.append("What is your current programming experience?", ["Beginner", "Intermediate", "Advanced"], "Do you want to learn about Python?")
-
-papote_tree.append("Do you want to learn Python for web development?", ["Yes", "No"], "Beginner")
-papote_tree.append("Do you want to learn Python for data analysis?", ["Yes", "No"], "Intermediate")
-papote_tree.append("Do you want to learn Python for machine learning?", ["Yes", "No"], "Intermediate")
-papote_tree.append("Do you want to learn Python for game development?", ["Yes", "No"], "Advanced")
-
-papote_tree.append("Python is a great choice for web development. Are you interested in web frameworks like Django or Flask?", ["Yes", "No"], "Do you want to learn Python for web development?")
-papote_tree.append("Python is widely used in data analysis. Are you interested in tools like Pandas, NumPy, or Matplotlib?", ["Yes", "No"], "Do you want to learn Python for data analysis?")
-papote_tree.append("Python is a popular choice for machine learning. Are you interested in libraries like Scikit-learn, TensorFlow, or PyTorch?", ["Yes", "No"], "Do you want to learn Python for machine learning?")
-papote_tree.append("Python can be used for game development with libraries like Pygame. Are you interested in game development?", ["Yes", "No"], "Do you want to learn Python for game development?")
-
-papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is a great choice for web development. Are you interested in web frameworks like Django or Flask?")
-papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is widely used in data analysis. Are you interested in tools like Pandas, NumPy, or Matplotlib?")
-papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python is a popular choice for machine learning. Are you interested in libraries like Scikit-learn, TensorFlow, or PyTorch?")
-papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Python can be used for game development with libraries like Pygame. Are you interested in game development?") 
-papote_tree.append("Python is a versatile language that can be used for many applications. Good luck with your Python journey!", [], "Do you want to learn about Python?") 
 
 
-'''
 
-client.run("MTA5MTI2Mjc0NjI1MjgwNDEyNg.Gsebrp.cJdD2YSX_V6-VC_RuX39NwIxK8PD9INRiq2eSM")
+client.run("MTA5MTI2Mjc0NjI1MjgwNDEyNg.GllGTP.3YWLuyn8VsxMbsjL2KkGOVCr_FJO7rWOt02uBE")

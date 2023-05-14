@@ -11,6 +11,9 @@ class Node:
             for n in self.next_nodes:
                 n.append(question, responses, previous_question)
 
+    def append_leaf(self, leaf):
+        self.next_nodes.append(leaf)
+
     def delete(self, question):
         for i, n in enumerate(self.next_nodes):
             if n.question == question:
@@ -28,6 +31,9 @@ class Tree:
     def append_question(self, question, responses, previous_question):
         self.first_node.append(question, responses, previous_question)
 
+    def append_leaf(self, leaf):
+        self.current_node.append_leaf(leaf)
+
     def delete_question(self, question):
         if self.first_node.question == question:
             self.first_node = None
@@ -42,3 +48,15 @@ class Tree:
             if n.responses == response:
                 self.current_node = n
                 break
+    def reset(self):
+        self.current_node = self.first_node
+
+    def speaks_about(self, topic):
+        def traverse_tree(node):
+            if topic in node.question:
+                return True
+            for n in node.next_nodes:
+                if traverse_tree(n):
+                    return True
+            return False
+        return traverse_tree(self.first_node)
