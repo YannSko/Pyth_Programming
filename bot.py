@@ -5,6 +5,7 @@ from Liste_chained import list_chained, Node, fifo
 from question_tree import Tree
 import datetime
 from Hashtable_user import HashTableUser
+import json
 
 intents = discord.Intents.all()
 
@@ -15,6 +16,8 @@ my_list = list_chained("historique=liste chainée")
 nod = Node("Ne")
 fifo = fifo(None)
 
+with open("suggestions.json", "w") as f:
+    json.dump([], f)
 
 @client.event
 async def on_message(message):
@@ -23,10 +26,7 @@ async def on_message(message):
     if message.content.startswith(client.command_prefix):
         ctx = await client.get_context(message)
         await client.invoke(ctx)
-    if message.content.lower() == "yes" or message.content.lower() == "no":
-        response = tree.traverse(message.content.lower())
-        if response:
-            await message.channel.send(response)
+    
     
 
     if message.content.startswith("Hello"):
@@ -103,7 +103,8 @@ def save_data():
             user_history = HashTableUser.get(user_id[0])
             for message_data in user_history:
                 f.write(message_data + "\n")
-
+    with open("suggestions.json", "w") as f:
+        json.dump(suggestions, f)
 
 # fonction pour fermer le bot et sauvegarder les données avant de quitter
 
@@ -238,32 +239,7 @@ async def menu(ctx):
 
 #_________________________ABRE POUR PAPOTER __________________________________
 ### Fonction Pour handle la conv
-async def handle_conversation(ctx, tree):
-    
-    answer = None
 
-    while answer != "reset":
-        # Si l'utilisateur a déjà répondu à la question courante, on passe à la suivante
-        if current_node.answer is not None:
-            current_node = current_node.next_nodes(answer)
-        # Sinon, on pose la question et on attend la réponse de l'utilisateur
-        else:
-            question = current_node.question
-            choices = current_node.choices
-            await ctx.send(f"{question} ({', '.join(choices)})")
-            try:
-                response = await client.wait_for("message", check=lambda message: message.author == ctx.author, timeout=60.0)
-                answer = response.content.lower().strip()
-                # Si la réponse n'est pas valide, on redemande la même question
-                if answer not in choices:
-                    await ctx.send("Je n'ai pas compris votre réponse. Veuillez répondre par l'un des choix proposés.")
-                # Sinon, on passe à la question suivante
-                else:
-                    current_node.answer = answer
-                    current_node = current_node.next_node(answer)
-            except asyncio.TimeoutError:
-                await ctx.send("Je n'ai pas obtenu de réponse de votre part. La conversation est terminée.")
-                answer = "reset"
 
 
 ### Création de l'abre
@@ -278,13 +254,56 @@ async def love(ctx):
     tree.append_question("Avez-vous déjà vécu une rupture amoureuse ?", ["Oui", "Non"], "Quelles sont les clés pour maintenir une relation amoureuse saine ?")
     tree.append_question("Comment avez-vous surmonté cette rupture ?", ["En prenant du temps pour moi-même", "En parlant à mes amis et ma famille", "En cherchant l'aide d'un professionnel", "Autre"], "Avez-vous déjà vécu une rupture amoureuse ?")
     tree.append_leaf("Si vous avez besoin d'aide pour surmonter une rupture amoureuse ou pour améliorer votre relation amoureuse actuelle, je vous recommande de consulter ce site : https://www.psychologytoday.com/us/topics/relationships")
-    await handle_conversation(ctx,tree)
+   
 
 
 
 
 
+#####__________________________Option++___________________________________
 
+#________________Sondage_____________________________
+with open("suggestions.json", "r") as f:
+    suggestions = json.load(f)
+
+
+# Emettre une suggestion
+@client.command(name="sug")
+async def suggestion(ctx, *, suggestion):
+    author = ctx.message.author
+    # Ajout la sug
+    suggestions.append({"author": author.id, "suggestion": suggestion, "votes": []})
+    await ctx.send(f"{author.mention} Votre suggestion a été prise en compte !")
+
+# affiche la liste de sug
+@client.command(name="show_sug")
+async def list_suggestions(ctx):
+    # Récupération de la liste de suggestions
+    suggestions_list = []
+    for i, suggestion in enumerate(suggestions):
+        votes_emoji = "👍 " + str(len(suggestion["votes"])) if suggestion["votes"] else ""
+        suggestion_text = f"{i}. {suggestion['suggestion']} - {ctx.guild.get_member(suggestion['author']).mention} {votes_emoji}"
+        suggestions_list.append(suggestion_text)
+    # Envoi de la liste de suggestions dans un message
+    await ctx.send("\n\n".join(suggestions_list))
+
+# Commande pour voter 
+@client.command(name="vote")
+async def vote(ctx, suggestion_number):
+    author = ctx.message.author
+    try:
+        suggestion_number = int(suggestion_number)
+        # Récupération de la suggestion correspondante 
+        suggestion = suggestions[suggestion_number]
+        # Vérification que l'auteur
+        if author.id not in suggestion["votes"]:
+            # Ajout du vote à la suggestion
+            suggestion["votes"].append(author.id)
+            await ctx.message.add_reaction("👍")
+        else:
+            await ctx.send(f"{author.mention} Vous avez déjà voté pour cette suggestion.")
+    except:
+        await ctx.send(f"{author.mention} La suggestion n°{suggestion_number} n'existe pas.")
 
 
 
