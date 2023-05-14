@@ -37,7 +37,7 @@ class Tree:
 
     def send_answer(self, response):
         for N in self.current_node.next_nodes:
-            if response in N.responses:
+            if response.content.lower() in N.responses:
                 self.current_node = N
                 break
 
@@ -51,5 +51,3 @@ class Tree:
             if topic.lower() in n.question.lower():
                 return f"Yes, I can speak about {topic}"
         return f"Sorry, I cannot speak about {topic}"
-
-

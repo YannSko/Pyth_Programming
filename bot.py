@@ -244,10 +244,9 @@ async def start_discussion(ctx):
 
     while True:
         # Send the current question to the user and wait for their response
-        await ctx.send(f"{tree.get_question()} Valid responses: {', '.join(tree.current_node.get_responses())}")
+        await ctx.send(f"{tree.get_question()} Valid responses: {', '.join(tree.current_node.responses)}")
 
         response = await client.wait_for('message')
-        
 
         # Check if the response is valid for the current node
         valid_response = False
@@ -262,12 +261,18 @@ async def start_discussion(ctx):
             await ctx.send("Sorry, I didn't understand your response. Please try again.")
             continue
 
+        # If the current node is the initial question, skip checking responses
+        if not tree.current_node.responses:
+            tree.current_node = tree.current_node.next_nodes[0]
+            await ctx.send(f"{tree.get_question()}")
+
         # If the current node has no further questions, end the discussion
-        if not tree.current_node.next_nodes:
+        elif not tree.current_node.next_nodes:
             await ctx.send(tree.current_node.question)
             break
 
     await ctx.send("Thank you for using our Python learning bot. Have a great day!")
+
 
 
 @client.command(name="topic")
