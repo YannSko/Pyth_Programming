@@ -6,7 +6,9 @@ from question_tree import Tree
 from datetime import datetime, timedelta
 from Hashtable_user import HashTableUser
 import json
-
+import os
+import requests
+from bs4 import BeautifulSoup
 intents = discord.Intents.all()
 
 client = commands.Bot(command_prefix ="!", intents = intents)
@@ -66,6 +68,23 @@ async def on_message(message):
 async def on_ready():
     channel = client.get_channel(1091265494771843095)
     await channel.send('the bot is ready')
+
+async def check_reminders():
+    global reminder_stack
+
+    while True:
+        # Check if it's time to remind the user of a stored reminder
+        if reminder_stack.size > 0 and reminder_stack.peek()[0] <= datetime.now():
+            # Send the reminder message to the user
+            remind_time, reminder = reminder_stack.pop()
+            await client.send(f'Reminder: {reminder}')
+
+        # Sleep for 1 second before checking again
+        await asyncio.sleep(1)
+
+# Call the check_reminders function to start the loop
+check_reminders()
+
 
 # _________________________________________History Related____________________________________________
 
@@ -174,13 +193,13 @@ async def show_user_history(ctx, user_id: int):
 async def menu(ctx):
     global fifo
 
-    # Check if user is first in fifo, if not add them to the end
+    # regarde si qqn dans fifo , sinon place à la suite
     if fifo.peek() is None:
         fifo.push(ctx.author.id)
     else:
         if fifo.peek().data != ctx.author.id:
             fifo.push(ctx.author.id)
-        if fifo.peek() is None: # Check if queue is still empty after adding the user
+        if fifo.peek() is None: # regarde si cest toujours null ou non
             await ctx.send("You are not currently first in line. Please wait your turn.")
             return
 
@@ -240,7 +259,7 @@ async def menu(ctx):
             await show_user_history(ctx, user_mention.content)
         elif message.content == "9":
             await ctx.send("Au revoir !")
-            fifo.pop() # Remove user from fifo
+            fifo.pop() # vire user from fifo
             return
         else:
             await ctx.send("Option invalide. Veuillez réessayer.")
@@ -328,12 +347,12 @@ async def show_all_suggestions(ctx):
 
 #_______ 2eme___Options________Reminder
 @client.command(name='remindme')
-async def remindme(ctx, time_str: str, *, reminder: str):
+async def remindme(ctx, time_str: int, *, reminder: str):
     global reminder_stack
     
     remind_time = None
     
-    # Extract the reminder message and time from the user input
+    
     try:
         remind_time = datetime.now() + timedelta(seconds=int(time_str))
     except ValueError:
@@ -346,16 +365,54 @@ async def remindme(ctx, time_str: str, *, reminder: str):
     # Send a confirmation message to the user
     await ctx.send(f'Reminder set for {remind_time.strftime("%m/%d/%Y %I:%M %p")} with message: {reminder}')
 
-    # Check if it's time to remind the user of a stored reminder
-    while reminder_stack.size > 0 and reminder_stack.peek()[0] <= datetime.now():
-        
+#_____option lol _____________
+@client.command(name="lol")
+async def youtube(ctx, *, url):
+    
+    if "youtube.com/watch?v=" not in url:
+        await ctx.send("Ce n'est pas un lien valide de vidéo YouTube.")
+        return
 
-        # Send the reminder message to the user
-        await ctx.channel.send(f'Reminder: {reminder}')
-        # Pop the reminder message and time off the stack
-        remind_time, reminder = reminder_stack.pop()
+    # Supprime l'éventuelle balise "<>" 
+    url = url.strip("<>")
+    # Récupère l'identifiant 
+    video_id = url.split("youtube.com/watch?v=")[1].split("&")[0]
+    
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    
+    os.system(f"start {video_url}")
+    await ctx.send(f"Ouverture de la vidéo : {video_url}")
+#________HIHI_____________
+@client.command(name="scrap")
+async def image(ctx, *, mot):
+    # Effectuer une recherche Google Images avec le mot
+    recherche = mot.replace(' ', '+')
+    url = f'https://www.google.com/search?q={recherche}&tbm=isch'
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    images = soup.find_all('img')
 
+    # Télécharger la première image 
+    for image in images:
+        src = image['src']
+        if src.startswith('https') and not src.endswith('.svg'):
+            response = requests.get(src, stream=True)
+            if response.status_code == 200:
+                with open(f'{mot}.jpg', 'wb') as file:
+                    for chunk in response.iter_content(1024):
+                        file.write(chunk)
+                break
+    
+     # Stocker le mot de la recherche et le nom de l'image dans un fichier JSON
+    data = {'mot': mot, 'image': f'{mot}.jpg'}
+    with open('Images.json', 'w') as file:
+        json.dump(data, file)
 
+    # Envoyer l'image dans le canal Discord
+    with open(f'{mot}.jpg', 'rb') as file:
+        image = discord.File(file)
+        await ctx.send(file=image)
 
 
 
