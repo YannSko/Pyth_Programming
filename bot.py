@@ -312,7 +312,17 @@ async def vote(ctx, suggestion_number):
             await ctx.send(f"{author.mention} Vous avez déjà voté pour cette suggestion.")
     except:
         await ctx.send(f"{author.mention} La suggestion n°{suggestion_number} n'existe pas.")
-
+@client.command(name="show_vot")
+async def show_all_suggestions(ctx):
+    
+    suggestions_list = list_chained("")
+    
+    for suggestion in suggestions:
+        votes_emoji = "👍 " + str(len(suggestion["votes"])) if suggestion["votes"] else ""
+        suggestion_text = f"{suggestion['suggestion']} - {ctx.guild.get_member(suggestion['author']).mention} {votes_emoji}"
+        suggestions_list.append(suggestion_text)
+    # Envoi de toutes les suggestions dans un message
+    await ctx.send("\n\n".join(suggestions_list.show_all()))
 
 
 
