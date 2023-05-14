@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 import asyncio
-from Liste_chained import list_chained, Node, fifo
+from Liste_chained import list_chained, Node, fifo, Stack
 from question_tree import Tree
-import datetime
+from datetime import datetime, timedelta
 from Hashtable_user import HashTableUser
 import json
 
@@ -15,6 +15,9 @@ client = commands.Bot(command_prefix ="!", intents = intents)
 my_list = list_chained("historique=liste chainée") 
 nod = Node("Ne")
 fifo = fifo(None)
+
+###____Reminder____
+reminder_stack = Stack(None)
 
 def load_suggestions():
     with open("suggestions.json", "r") as f:
@@ -30,13 +33,11 @@ async def on_message(message):
     if message.content.startswith(client.command_prefix):
         ctx = await client.get_context(message)
         await client.invoke(ctx)
-    
-    
+  
 
     if message.content.startswith("Hello"):
         await message.channel.send("hello")
     await add_to_history(message)
-        ### Arbre
 
 
     if message.author == client.user:
@@ -75,7 +76,8 @@ HashTableUser = HashTableUser(bucket_size=10)
 async def add_to_history(message):
     if not message.content.startswith(tuple(str(i) for i in range(10))): # prevent le !menu
         author_id = str(message.author.id)
-        timestamp = str(datetime.datetime.now())
+        timestamp = str(datetime.now())
+
         message_content = message.content
         message_data = f'Message : {message_content} | Auteur : {author_id} | Date/Heure : {timestamp}'
         Component_history = Node(message_data)
@@ -268,7 +270,7 @@ async def love(ctx):
 
 #####__________________________Option++___________________________________
 
-#________________Sondage_____________________________
+#________________Sondage_____________________________ via list chained
 with open("suggestions.json", "r") as f:
     suggestions = json.load(f)
 
@@ -323,6 +325,37 @@ async def show_all_suggestions(ctx):
         suggestions_list.append(suggestion_text)
     # Envoi de toutes les suggestions dans un message
     await ctx.send("\n\n".join(suggestions_list.show_all()))
+
+#_______ 2eme___Options________Reminder
+@client.command(name='remindme')
+async def remindme(ctx, time_str: str, *, reminder: str):
+    global reminder_stack
+    
+    remind_time = None
+    
+    # Extract the reminder message and time from the user input
+    try:
+        remind_time = datetime.now() + timedelta(seconds=int(time_str))
+    except ValueError:
+        await ctx.send('Invalid input. Usage: !remindme [time in seconds] [reminder message]')
+        return
+
+    # Push the reminder message and time onto the stack
+    reminder_stack.push((remind_time, reminder))
+
+    # Send a confirmation message to the user
+    await ctx.send(f'Reminder set for {remind_time.strftime("%m/%d/%Y %I:%M %p")} with message: {reminder}')
+
+    # Check if it's time to remind the user of a stored reminder
+    while reminder_stack.size > 0 and reminder_stack.peek()[0] <= datetime.now():
+        
+
+        # Send the reminder message to the user
+        await ctx.channel.send(f'Reminder: {reminder}')
+        # Pop the reminder message and time off the stack
+        remind_time, reminder = reminder_stack.pop()
+
+
 
 
 

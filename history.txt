@@ -30,3 +30,15 @@ Message : !vote 1 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:30:
 Message : !vote 0 | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:30:17.503021
 Message : !show_sug | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:30:25.212930
 Message : !show_vot | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:30:47.134161
+Message : !show_vot | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 21:38:39.843932
+Message : !remind 10 lol | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:09:24.072790
+Message : !remind 10 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:09:55.596571
+Message : !remindme | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:14:46.145634
+Message : !remind | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:14:49.696412
+Message : !remindme 10 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:15:07.367850
+Message : !remindme 1 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:15:54.677363
+Message : !remindme 1 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:17:14.221045
+Message : !remindme 1 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:17:53.433565
+Message : !remindme 1 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:20:43.770370
+Message : !remindme 1 oii | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:22:28.971351
+Message : remindme 1 oui | Auteur : 897748541554950165 | Date/Heure : 2023-05-14 22:23:56.371154
