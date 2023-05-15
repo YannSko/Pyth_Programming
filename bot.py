@@ -2,13 +2,14 @@ import discord
 from discord.ext import commands
 import asyncio
 from Liste_chained import list_chained, Node, fifo, Stack
-from question_tree import Tree
+
 from datetime import datetime, timedelta
 from Hashtable_user import HashTableUser
 import json
 import os
 import requests
 from bs4 import BeautifulSoup
+from binary_tree_bot import *
 intents = discord.Intents.all()
 
 client = commands.Bot(command_prefix ="!", intents = intents)
@@ -84,6 +85,8 @@ async def check_reminders():
 
 # Call the check_reminders function to start the loop
 check_reminders()
+
+
 
 
 # _________________________________________History Related____________________________________________
@@ -264,27 +267,68 @@ async def menu(ctx):
         else:
             await ctx.send("Option invalide. Veuillez réessayer.")
 
-#_________________________ABRE POUR PAPOTER __________________________________
-### Fonction Pour handle la conv
+#_________________________ABRE POUR PAPOTER __________________________________( FAIS POST DEMO EN CLASSE)
+### INITIER ARBRE
 
+cooking_tree = Binary_Tree()
+cooking_tree.add_subject("cooking", "What type of cuisine do you want to cook?")
+cooking_tree.root = Junction(cooking_tree.print_subject("cooking"))
+cooking_tree.root.add_junction("Do you want to cook Asian cuisine?", True)
+cooking_tree.root.add_junction("Do you want to cook European cuisine?", False)
+cooking_tree.root.right.add_junction("Do you want to cook Chinese cuisine?", True)
+cooking_tree.root.right.add_junction("Do you want to cook Japanese cuisine?", False)
+cooking_tree.root.right.right.add_leaf("Awesome, here are some Chinese cooking recipes! DOG !", True)
+cooking_tree.root.right.left.add_leaf("Awesome, here are some Japanese cooking recipes! MIAOU ! ", False)
+cooking_tree.root.left.add_junction("Do you want to cook Italian cuisine?", True)
+cooking_tree.root.left.add_junction("Do you want to cook French cuisine?", False)
+cooking_tree.root.left.right.add_leaf("Awesome, here are some Italian cooking recipes! : Pasta ", True)
+cooking_tree.root.left.left.add_leaf("Awesome, here are some French cooking recipes! PAIN ", False)
 
+### INTERACTION AVEC LARBRE  ( pour reset cliquer sur la croix)  
+@client.command(name="tree")
+async def display_help_message(ctx):
+    global actual_tree_node
+    actual_tree_node = cooking_tree.root
+    message = await ctx.send(actual_tree_node)
+    await ctx.message.add_reaction("✅")
+    await message.add_reaction("👍")
+    await message.add_reaction("👎")
+    await message.add_reaction("❌")
 
-### Création de l'abre
-@client.command(name="love")
-async def love(ctx):
-    tree = Tree("Bienvenue dans cette discussion sur l'amour. Pour commencer, pouvez-vous me dire ce qui vous amène ici ?")
-    tree.append_question("Êtes-vous en couple ?", ["Oui", "Non"], "Bienvenue dans cette discussion sur l'amour. Pour commencer, pouvez-vous me dire ce qui vous amène ici ?")
-    tree.append_question("Comment avez-vous rencontré votre partenaire ?", ["En ligne", "À travers des amis", "Au travail", "Dans un lieu public", "Autre"], "Êtes-vous en couple ?")
-    tree.append_question("Qu'est-ce que vous appréciez le plus chez votre partenaire ?", ["Son physique", "Sa personnalité", "Son sens de l'humour", "Sa gentillesse", "Autre"], "Comment avez-vous rencontré votre partenaire ?")
-    tree.append_question("Comment entretenez-vous votre relation amoureuse ?", ["En communiquant ouvertement et régulièrement", "En passant du temps ensemble", "En faisant des choses spéciales pour l'autre", "En respectant l'autre et ses besoins"], "Qu'est-ce que vous appréciez le plus chez votre partenaire ?")
-    tree.append_question("Quelles sont les clés pour maintenir une relation amoureuse saine ?", ["La communication", "La confiance", "Le respect", "Le compromis", "La passion"], "Comment entretenez-vous votre relation amoureuse ?")
-    tree.append_question("Avez-vous déjà vécu une rupture amoureuse ?", ["Oui", "Non"], "Quelles sont les clés pour maintenir une relation amoureuse saine ?")
-    tree.append_question("Comment avez-vous surmonté cette rupture ?", ["En prenant du temps pour moi-même", "En parlant à mes amis et ma famille", "En cherchant l'aide d'un professionnel", "Autre"], "Avez-vous déjà vécu une rupture amoureuse ?")
-    tree.append_leaf("Si vous avez besoin d'aide pour surmonter une rupture amoureuse ou pour améliorer votre relation amoureuse actuelle, je vous recommande de consulter ce site : https://www.psychologytoday.com/us/topics/relationships")
-   
+    def check(reaction, user):
+        return user == ctx.author and reaction.message.id == message.id
 
-
-
+    try:
+        while True:
+            reaction, user = await client.wait_for('reaction_add', timeout=60.0, check=check)
+            if str(reaction.emoji) == '❌':
+                await message.delete()
+                break
+            elif str(reaction.emoji) == '✅':
+                actual_tree_node = cooking_tree.root
+                await message.edit(content=actual_tree_node)
+            elif str(reaction.emoji) == '👍':
+                actual_tree_node = cooking_tree.next_junction(actual_tree_node, True)
+                if isinstance(actual_tree_node, Junction):
+                    await message.edit(content=actual_tree_node)
+                else:
+                    await message.edit(content=actual_tree_node)
+                    break
+            elif str(reaction.emoji) == '👎':
+                actual_tree_node = cooking_tree.next_junction(actual_tree_node, False)
+                if isinstance(actual_tree_node, Junction):
+                    await message.edit(content=actual_tree_node)
+                else:
+                    await message.edit(content=actual_tree_node)
+                    break
+    except asyncio.TimeoutError:
+        await message.delete()
+##  sLECTION DES SUJETS EN FONCTION DE LA PRESENCE DE SUJET DANS LE TREE
+@client.command(name="subject")
+async def get_existing_subjects(ctx):
+    existing_subjects = list(cooking_tree.subjects.keys())
+    message = f"The existing subjects are {existing_subjects}"
+    await ctx.send(message)
 
 
 #####__________________________Option++___________________________________
@@ -414,6 +458,36 @@ async def image(ctx, *, mot):
         image = discord.File(file)
         await ctx.send(file=image)
 
+##________________Ma note _____________ ( lancez la commande !)
 
+@client.command(name="note")
+async def note20(ctx):
+   
+    message = await ctx.send("Donnez une note sur 20 à Yann :")
+    
+    # 
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    
+    try:
+        note_message = await client.wait_for('message', check=check, timeout=10.0)
+    except asyncio.TimeoutError:
+        await message.edit(content=" Je me suis endormi ...")
+        return
+
+    # Vérifie que la note = un nombre 
+    try:
+        note = float(note_message.content)
+    except ValueError:
+        await ctx.send("Une note cest un nombre ... on part sur 20 merci ! ")
+        return
+    
+    # Vérifie que la note est entre 0 et 20
+    if note < 0 or note > 20:
+        await ctx.send("La note doit être entre 0 et 20, cest pas du jeu sinon")
+        return
+    
+    
+    await ctx.send("Un 20 ? Merci ça régale :) !")
 
 client.run("MTA5MTI2Mjc0NjI1MjgwNDEyNg.GllGTP.3YWLuyn8VsxMbsjL2KkGOVCr_FJO7rWOt02uBE")
