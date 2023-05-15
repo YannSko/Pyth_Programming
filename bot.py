@@ -490,4 +490,4 @@ async def note20(ctx):
     
     await ctx.send("Un 20 ? Merci ça régale :) !")
 
-client.run("MTA5MTI2Mjc0NjI1MjgwNDEyNg.GllGTP.3YWLuyn8VsxMbsjL2KkGOVCr_FJO7rWOt02uBE")
+client.run("Tokenmiamiam")
